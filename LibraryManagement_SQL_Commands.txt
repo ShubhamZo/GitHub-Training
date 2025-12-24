@@ -1,0 +1,25 @@
+use LibraryManagement;
+
+************************** AUTHORS TABLE ************************************
+CREATE SEQUENCE Seq_Authors START WITH 1 INCREMENT BY 1;
+
+Create Table Authors (
+AuthorID VARCHAR(3) PRIMARY KEY DEFAULT('A' + RIGHT('00' + CAST(NEXT VALUE FOR Seq_Authors AS VARCHAR(2)),2)),
+AuthorName Varchar(50) NOT NULL);
+
+************************** BOOKSTABLE ************************************
+CREATE SEQUENCE Seq_Books START WITH 1 INCREMENT by 1;
+
+Create Table Books (
+BookID VARCHAR(3) PRIMARY KEY DEFAULT('B' + RIGHT('00' + CAST(NEXT VALUE FOR Seq_Books AS VARCHAR(2)),2)),
+BookTitle VARCHAR(50) NOT NULL,
+AuthorID VARCHAR(3) NOT NULL,
+CONSTRAINT FK_Books_Authors FOREIGN KEY (AuthorID) REFERENCES Authors(AuthorID)
+);
+
+************************** MEMBER TABLE ************************************
+CREATE SEQUENCE Seq_Members START WITH 1 INCREMENT BY 1;
+
+CREATE TABLE Members(
+MemberID VARCHAR(3) PRIMARY KEY DEFAULT('M' + RIGHT('00' + CAST(NEXT VALUE FOR Seq_Members AS VARCHAR(2)),2)),
+MemberName VARCHAR(50) NOT NULL);
