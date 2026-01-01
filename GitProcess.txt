@@ -1,0 +1,26 @@
+1. Go to the desired folder
+	- cd /PATH
+
+2. Once inside the Path, initialse the git
+	- git init
+
+3. Add the files in git 
+	- git add .
+
+4. Check the status 
+	- git status
+
+5. Commit the files with some Message
+	- git commit -m "MESSAGE"
+	after this your files are ready to be commited
+
+6. Connect your local repository to the Github Repository. 
+   Copy the path of your repository in gitHub from the CODE
+	- git remote add origin https://github.com/ShubhamZo/REPOSITORY_NAME
+
+7. create the main branch now
+	- git branch -M main
+
+8. Final step to Push the files from local repository to GitHub
+	- git push -u origin main
+	pushes from origin to main

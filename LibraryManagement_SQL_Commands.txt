@@ -1,0 +1,176 @@
+use LibraryManagement;
+
+************************** AUTHORS TABLE ************************************
+CREATE SEQUENCE Seq_Authors START WITH 1 INCREMENT BY 1;
+
+Create Table Authors (
+AuthorID VARCHAR(3) PRIMARY KEY DEFAULT('A' + RIGHT('00' + CAST(NEXT VALUE FOR Seq_Authors AS VARCHAR(2)),2)),
+AuthorName Varchar(50) NOT NULL);
+
+************************** BOOKSTABLE ************************************
+CREATE SEQUENCE Seq_Books START WITH 1 INCREMENT by 1;
+
+Create Table Books (
+BookID VARCHAR(3) PRIMARY KEY DEFAULT('B' + RIGHT('00' + CAST(NEXT VALUE FOR Seq_Books AS VARCHAR(2)),2)),
+BookTitle VARCHAR(50) NOT NULL,
+AuthorID VARCHAR(3) NOT NULL,
+CONSTRAINT FK_Books_Authors FOREIGN KEY (AuthorID) REFERENCES Authors(AuthorID)
+);
+
+************************** MEMBER TABLE ************************************
+CREATE SEQUENCE Seq_Members START WITH 1 INCREMENT BY 1;
+
+CREATE TABLE Members(
+MemberID VARCHAR(3) PRIMARY KEY DEFAULT('M' + RIGHT('00' + CAST(NEXT VALUE FOR Seq_Members AS VARCHAR(2)),2)),
+MemberName VARCHAR(50) NOT NULL);
+
+************************** BooksIssued TABLE ************************************
+CREATE SEQUENCE Seq_Issue START WITH 1 INCREMENT BY 1;
+
+CREATE TABLE BooksIssued(
+IssueID VARCHAR(3) PRIMARY KEY DEFAULT('I' + RIGHT('00' + CAST(NEXT VALUE FOR Seq_Issue AS VARCHAR(2)),2)),
+BookID VARCHAR(3) NOT NULL, CONSTRAINT FK_BooksIssued_Book FOREIGN KEY(BookID) REFERENCES Books(BookID),
+MemberID VARCHAR(3) NOT NULL, CONSTRAINT FK_BooksIssued_Members FOREIGN KEY(MemberID) REFERENCES Members(MemberID),
+IssuedDate DATE NOT NULL,
+ReturnDate DATE NOT NULL
+);
+
+
+
+select * from Authors;
+select * from Books;
+select * from Members;
+select * from BooksIssued;
+
+
+*******************************************************************************************
+******************************************AUDIT INFORMATION********************************
+*******************************************************************************************
+
+CREATE TABLE AuthorsAudit
+(
+    AuditID INT IDENTITY(1,1) PRIMARY KEY,
+    AuthorID VARCHAR(3),
+    AuthorName VARCHAR(100),
+    OperationType VARCHAR(10),   -- INSERT / UPDATE / DELETE
+    ChangedBy VARCHAR(50),
+    ChangedDate DATETIME
+);
+
+CREATE TRIGGER trg_Authors_Audit
+ON Authors
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- INSERT
+    IF EXISTS (SELECT * FROM INSERTED) AND NOT EXISTS (SELECT * FROM DELETED)
+    BEGIN
+        INSERT INTO AuthorsAudit
+        (AuthorID, AuthorName, OperationType, ChangedBy, ChangedDate)
+        SELECT
+            AuthorID,
+            AuthorName,
+            'INSERT',
+            SYSTEM_USER,
+            GETDATE()
+        FROM INSERTED;
+    END
+
+    -- UPDATE
+    IF EXISTS (SELECT * FROM INSERTED) AND EXISTS (SELECT * FROM DELETED)
+    BEGIN
+        INSERT INTO AuthorsAudit
+        (AuthorID, AuthorName, OperationType, ChangedBy, ChangedDate)
+        SELECT
+            AuthorID,
+            AuthorName,
+            'UPDATE',
+            SYSTEM_USER,
+            GETDATE()
+        FROM INSERTED;
+    END
+
+    -- DELETE
+    IF EXISTS (SELECT * FROM DELETED) AND NOT EXISTS (SELECT * FROM INSERTED)
+    BEGIN
+        INSERT INTO AuthorsAudit
+        (AuthorID, AuthorName, OperationType, ChangedBy, ChangedDate)
+        SELECT
+            AuthorID,
+            AuthorName,
+            'DELETE',
+            SYSTEM_USER,
+            GETDATE()
+        FROM DELETED;
+    END
+END;
+
+
+Create Table BooksAudit
+(
+    AuditID INT IDENTITY(1,1) PRIMARY KEY,
+    BookID VARCHAR(3),
+    BookName VARCHAR(100),
+    AuthorID VARCHAR(3),
+    OperationType VARCHAR(10),
+    ChangedBy VARCHAR(50),
+    ChangedDate DATETIME
+);
+
+
+
+
+CREATE TRIGGER trg_Books_Audit
+ON Books
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- INSERT
+    IF EXISTS (SELECT * FROM INSERTED) AND NOT EXISTS (SELECT * FROM DELETED)
+    BEGIN
+        INSERT INTO BooksAudit
+        (BookID, BookName, AuthorID, OperationType, ChangedBy, ChangedDate)
+        SELECT
+            BookID,
+            BookTitle,
+            AuthorID,
+            'INSERT',
+            SYSTEM_USER,
+            GETDATE()
+        FROM INSERTED;
+    END
+
+    -- UPDATE
+    IF EXISTS (SELECT * FROM INSERTED) AND EXISTS (SELECT * FROM DELETED)
+    BEGIN
+        INSERT INTO BooksAudit
+        (BookID, BookName, AuthorID, OperationType, ChangedBy, ChangedDate)
+        SELECT
+            BookID,
+            BookTitle,
+            AuthorID,
+            'UPDATE',
+            SYSTEM_USER,
+            GETDATE()
+        FROM INSERTED;
+    END
+
+    -- DELETE
+    IF EXISTS (SELECT * FROM DELETED) AND NOT EXISTS (SELECT * FROM INSERTED)
+    BEGIN
+        INSERT INTO BooksAudit
+        (BookID, BookName, AuthorID, OperationType, ChangedBy, ChangedDate)
+        SELECT
+            BookID,
+            BookTitle,
+            AuthorID,
+            'DELETE',
+            SYSTEM_USER,
+            GETDATE()
+        FROM DELETED;
+    END
+END;
